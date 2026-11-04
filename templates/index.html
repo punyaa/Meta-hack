@@ -11,22 +11,51 @@
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+    <div class="noise"></div>
     <header class="nav">
       <a class="brand" href="/" aria-label="SignalForge home">
-        <span class="brand-mark">S</span>
+        <span class="brand-mark"><span>S</span></span>
         <span>SignalForge</span>
       </a>
-      <div class="model-pill"><span></span>Muse Spark + SAM 3.1</div>
+      <div class="nav-models">
+        <span class="built-with">Built with Meta models</span>
+        <div class="model-pill"><span></span>Muse Spark 1.3 + SAM 3.1</div>
+      </div>
     </header>
 
     <main>
       <section class="hero">
-        <div class="eyebrow">VISUAL RESEARCH COMPILER</div>
-        <h1>Your camera roll is full of signals.<br /><em>Turn them into a plan.</em></h1>
-        <p class="hero-copy">
-          Upload crooked slide photos and one goal. SignalForge repairs the visuals,
-          reconstructs the evidence, and tells you what to do now, next, and later.
-        </p>
+        <div class="hero-content">
+          <div class="eyebrow"><span class="spark-dot"></span>MULTIMODAL RESEARCH COMPILER</div>
+          <h1>From scattered captures<br />to <em>reasoned action.</em></h1>
+          <p class="hero-copy">
+            Give Muse a folder of crooked slide photos and one goal. SignalForge repairs
+            the visuals, understands the collection, and compiles what matters next.
+          </p>
+          <div class="hero-proof">
+            <span><b>1M</b> context</span>
+            <span><b>Pixel-precise</b> masks</span>
+            <span><b>Source-linked</b> plans</span>
+          </div>
+        </div>
+        <div class="model-constellation" aria-hidden="true">
+          <div class="orbit orbit-a"></div>
+          <div class="orbit orbit-b"></div>
+          <div class="core"><span class="core-label">SIGNAL</span><strong>Forge</strong></div>
+          <div class="model-node muse-node"><i></i><span>MUSE</span><small>understands</small></div>
+          <div class="model-node sam-node"><i></i><span>SAM</span><small>isolates</small></div>
+          <div class="model-node evidence-node"><i></i><span>PROOF</span><small>grounds</small></div>
+        </div>
+      </section>
+
+      <section class="model-ribbon" aria-label="Model pipeline">
+        <div><span class="model-index">01</span><p><strong>Muse Spark 1.3</strong><small>Vision + collection reasoning</small></p></div>
+        <span class="flow-arrow">→</span>
+        <div><span class="model-index">02</span><p><strong>SAM 3.1</strong><small>Screen + whiteboard masks</small></p></div>
+        <span class="flow-arrow">→</span>
+        <div><span class="model-index">03</span><p><strong>SignalForge</strong><small>Evidence-backed actions</small></p></div>
       </section>
 
       {% if demo_mode %}
@@ -35,12 +64,13 @@
 
       <section class="workspace" id="workspace">
         <form id="forge-form" class="forge-card">
+          <div class="card-heading"><div><span class="card-kicker">INPUT</span><h2>Compile a visual folder</h2></div><span class="live-chip">● READY</span></div>
           <div class="step-label">01 · ADD YOUR EVIDENCE</div>
           <label class="drop-zone" id="drop-zone" for="files">
             <input id="files" name="files" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple required />
-            <span class="drop-icon">↥</span>
+            <span class="drop-icon"><i></i>↥</span>
             <strong>Drop slide photos here</strong>
-            <span>or choose up to {{ max_images }} images</span>
+            <span>JPG, PNG, WebP or HEIC · up to {{ max_images }} images</span>
           </label>
           <div class="preview-strip" id="preview-strip"></div>
 
@@ -49,17 +79,18 @@
             <span>What are you trying to accomplish?</span>
             <textarea id="goal" name="goal" minlength="8" maxlength="500" required placeholder="Help me build a visual assistant using the ideas in these workshop slides."></textarea>
           </label>
-          <button class="forge-button" type="submit">Forge my plan <span>→</span></button>
+          <button class="forge-button" type="submit"><i></i>Compile with Muse <span>→</span></button>
           <p class="privacy-note">Live mode sends retained images to Meta Model API. Local run artifacts are ignored by Git.</p>
         </form>
 
         <aside class="promise-card">
-          <div class="step-label">WHAT HAPPENS</div>
+          <div class="card-kicker">MODEL ORCHESTRATION</div>
+          <h2>How the signal moves</h2>
           <ol>
-            <li><span>1</span><div><strong>Repair</strong><p>SAM finds the screen. Geometry flattens it.</p></div></li>
-            <li><span>2</span><div><strong>Read</strong><p>Muse extracts only what the image supports.</p></div></li>
-            <li><span>3</span><div><strong>Compile</strong><p>One goal becomes now, next, and later.</p></div></li>
-            <li><span>4</span><div><strong>Verify</strong><p>Every supported step links to its source.</p></div></li>
+            <li class="sam-stage"><span>01</span><div><small>SAM 3.1</small><strong>Repair the surface</strong><p>Segment the screen, then flatten its geometry.</p></div></li>
+            <li class="muse-stage"><span>02</span><div><small>MUSE · VISION</small><strong>Read the evidence</strong><p>Extract only what each image can support.</p></div></li>
+            <li class="muse-stage"><span>03</span><div><small>MUSE · REASONING</small><strong>Connect the collection</strong><p>Reason across every retained visual at once.</p></div></li>
+            <li class="proof-stage"><span>04</span><div><small>SIGNALFORGE</small><strong>Compile with proof</strong><p>Turn one goal into source-linked next steps.</p></div></li>
           </ol>
         </aside>
       </section>
@@ -67,7 +98,7 @@
       <section class="progress-panel hidden" id="progress-panel" aria-live="polite">
         <div class="progress-top"><span id="progress-message">Preparing images</span><strong id="progress-number">0%</strong></div>
         <div class="progress-track"><div id="progress-bar"></div></div>
-        <p>Muse reads. SAM isolates. SignalForge compiles.</p>
+        <p><span class="spark-dot"></span>Muse reads · SAM isolates · SignalForge compiles</p>
       </section>
 
       <section class="results hidden" id="results">
