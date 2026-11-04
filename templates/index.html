@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Compile messy slide photos into evidence-backed action." />
+    <title>SignalForge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="nav">
+      <a class="brand" href="/" aria-label="SignalForge home">
+        <span class="brand-mark">S</span>
+        <span>SignalForge</span>
+      </a>
+      <div class="model-pill"><span></span>Muse Spark + SAM 3.1</div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="eyebrow">VISUAL RESEARCH COMPILER</div>
+        <h1>Your camera roll is full of signals.<br /><em>Turn them into a plan.</em></h1>
+        <p class="hero-copy">
+          Upload crooked slide photos and one goal. SignalForge repairs the visuals,
+          reconstructs the evidence, and tells you what to do now, next, and later.
+        </p>
+      </section>
+
+      {% if demo_mode %}
+      <div class="notice"><strong>Demo mode:</strong> the interface and local image pipeline work now. Add <code>MODEL_API_KEY</code> to enable grounded Muse and SAM analysis.</div>
+      {% endif %}
+
+      <section class="workspace" id="workspace">
+        <form id="forge-form" class="forge-card">
+          <div class="step-label">01 · ADD YOUR EVIDENCE</div>
+          <label class="drop-zone" id="drop-zone" for="files">
+            <input id="files" name="files" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple required />
+            <span class="drop-icon">↥</span>
+            <strong>Drop slide photos here</strong>
+            <span>or choose up to {{ max_images }} images</span>
+          </label>
+          <div class="preview-strip" id="preview-strip"></div>
+
+          <div class="step-label goal-label">02 · NAME THE OUTCOME</div>
+          <label class="goal-field">
+            <span>What are you trying to accomplish?</span>
+            <textarea id="goal" name="goal" minlength="8" maxlength="500" required placeholder="Help me build a visual assistant using the ideas in these workshop slides."></textarea>
+          </label>
+          <button class="forge-button" type="submit">Forge my plan <span>→</span></button>
+          <p class="privacy-note">Live mode sends retained images to Meta Model API. Local run artifacts are ignored by Git.</p>
+        </form>
+
+        <aside class="promise-card">
+          <div class="step-label">WHAT HAPPENS</div>
+          <ol>
+            <li><span>1</span><div><strong>Repair</strong><p>SAM finds the screen. Geometry flattens it.</p></div></li>
+            <li><span>2</span><div><strong>Read</strong><p>Muse extracts only what the image supports.</p></div></li>
+            <li><span>3</span><div><strong>Compile</strong><p>One goal becomes now, next, and later.</p></div></li>
+            <li><span>4</span><div><strong>Verify</strong><p>Every supported step links to its source.</p></div></li>
+          </ol>
+        </aside>
+      </section>
+
+      <section class="progress-panel hidden" id="progress-panel" aria-live="polite">
+        <div class="progress-top"><span id="progress-message">Preparing images</span><strong id="progress-number">0%</strong></div>
+        <div class="progress-track"><div id="progress-bar"></div></div>
+        <p>Muse reads. SAM isolates. SignalForge compiles.</p>
+      </section>
+
+      <section class="results hidden" id="results">
+        <div class="result-heading">
+          <div><div class="eyebrow">YOUR COMPILED SIGNAL</div><h2 id="result-headline"></h2></div>
+          <button id="new-project" class="secondary-button">Start another</button>
+        </div>
+        <p id="result-summary" class="result-summary"></p>
+        <div class="stats" id="stats"></div>
+        <div class="plan-grid" id="plan-grid"></div>
+        <div class="evidence-section">
+          <div class="section-title"><h3>Evidence</h3><p>Open a card to compare the original and corrected visual.</p></div>
+          <div class="evidence-grid" id="evidence-grid"></div>
+        </div>
+        <div class="detail-grid">
+          <article><h3>Still missing</h3><ul id="missing-list"></ul></article>
+          <article><h3>Conflicts</h3><ul id="conflict-list"></ul></article>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="image-dialog">
+      <button id="close-dialog" aria-label="Close">×</button>
+      <div id="dialog-content"></div>
+    </dialog>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
