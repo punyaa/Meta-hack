@@ -41,6 +41,41 @@ SIGNALFORGE_DEMO_MODE=false
 
 The Muse Code CLI login is stored in macOS Keychain and is separate from the environment variable used by this web application. Never commit `.env`.
 
+## Deploy
+
+The repo ships a `Dockerfile` (works on Render, Railway, Fly.io, Cloud Run, Hugging Face Spaces) plus a `render.yaml` Blueprint. On Render's free tier:
+
+1. Push this repo to GitHub.
+2. Create a new **Blueprint** from the repo; Render reads `render.yaml`.
+3. Paste your key when prompted for `MODEL_API_KEY`.
+4. Open the service URL; `/api/health` should report `"demo_mode": false`.
+
+Uploads live on the container's ephemeral disk: old run images disappear on restart or redeploy, so treat share links as short-lived unless you add object storage.
+
+## Deploy to Vercel
+
+SignalForge ships a serverless flow (v2 API) for Vercel's Hobby tier:
+
+1. Push this repo to GitHub.
+2. In Vercel, import the repo. The Python framework preset auto-detects FastAPI via `tool.vercel.entrypoint` in `pyproject.toml`; no `vercel.json` needed.
+3. Create a Blob store (Storage tab) and connect it to the project. Vercel adds `BLOB_READ_WRITE_TOKEN` automatically; use a **public** store so result images render.
+4. Set environment variables: `MODEL_API_KEY`, `STORAGE_BACKEND=blob`, `JOB_BACKEND=blob`.
+5. For accounts and history: create a Vercel Postgres database, connect it, and set `POSTGRES_URL` (pooled) plus a generated `SESSION_SECRET`. For Drive import, set `GOOGLE_API_KEY`.
+6. Deploy and open `/api/health`: `"flow"` should be `"v2"`, `"demo_mode"` false with a key set.
+
+How v2 differs: the browser compresses each photo (max 1600px JPEG, under the 4.5MB request cap), uploads images one per request, then each status poll advances exactly one pipeline step (dedupe → one image read → one correction → final plan), with job state in Blob. No background tasks, no local disk. Uploads accept JPG, PNG, and WebP in this flow (no HEIC: browsers can't reliably decode it for compression).
+
+Test the v2 flow locally without Vercel: set `WEB_FLOW=v2` in `.env` and restart. Uploads stay on local disk and jobs stay in memory.
+
+After pulling, run `uv sync` once (needs network): it installs the new `vercel-blob` and `psycopg` dependencies and refreshes `uv.lock`.
+
+## Accounts, Library, and Drive import
+
+When `POSTGRES_URL` is set, the app requires an account: `/signup` and `/login` (email + password, scrypt-hashed, 30-day signed cookie sessions). Without it, the app stays open and unrecorded, exactly as before.
+
+- **Library** (`/library`): every v2 project is recorded — goal, status, photos, and notes. Each card has **Photos** and **Notes** tabs, and finished projects reopen the full report.
+- **Drive import**: paste a public Google Drive folder link in the v2 form. Photos import as evidence (20 MB cap each, remaining slots only); Google Docs, Slides, and Sheets export into the notes (10 docs max, truncated). Needs a `GOOGLE_API_KEY` with the Drive API enabled; folders must be shared as "Anyone with the link".
+
 ## How Muse Spark works in this repository
 
 `signalforge/services/muse.py` is the only Model API boundary. It uses the OpenAI-compatible Meta endpoint:

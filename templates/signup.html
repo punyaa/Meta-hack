@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign up · SignalForge</title>
+    <script>
+      try {
+        if (localStorage.getItem("signalforge-theme") !== "dark") {
+          document.documentElement.dataset.theme = "light";
+        }
+      } catch (error) {}
+    </script>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body class="auth-body">
+    <main class="auth-card">
+      <a class="brand" href="/" aria-label="SignalForge home">
+        <span class="brand-mark"><span>S</span></span>
+        <span>SignalForge</span>
+      </a>
+      <h1>Create your account</h1>
+      <p class="auth-sub">Projects and reports stay in your private library.</p>
+      {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+      <form method="post" action="/signup">
+        <label>Email<input type="email" name="email" required autocomplete="email" /></label>
+        <label>Password<input type="password" name="password" required minlength="8" maxlength="128" autocomplete="new-password" /></label>
+        <button class="forge-button" type="submit">Sign up</button>
+      </form>
+      <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Library · SignalForge</title>
+    <script>
+      try {
+        if (localStorage.getItem("signalforge-theme") !== "dark") {
+          document.documentElement.dataset.theme = "light";
+        }
+      } catch (error) {}
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+    <div class="noise"></div>
+    <header class="nav">
+      <a class="brand" href="/" aria-label="SignalForge home">
+        <span class="brand-mark"><span>S</span></span>
+        <span>SignalForge</span>
+      </a>
+      <div class="nav-models">
+        <span class="built-with">{{ user_email }}</span>
+        <a class="nav-link" href="/">New project</a>
+        <form method="post" action="/logout" class="logout-form"><button type="submit">Log out</button></form>
+      </div>
+    </header>
+
+    <main class="library">
+      <div class="library-head">
+        <div class="eyebrow"><span class="spark-dot"></span>YOUR LIBRARY</div>
+        <h1>Projects</h1>
+      </div>
+      {% if not projects %}
+      <div class="empty-library">
+        <p>No projects yet. Compile your first folder of visuals.</p>
+        <a class="secondary-button" href="/">Start a project</a>
+      </div>
+      {% endif %}
+      {% for project in projects %}
+      <article class="library-card">
+        <div class="library-summary">
+          {% if project.cover %}<img class="library-cover" src="{{ project.cover }}" alt="" loading="lazy" />{% endif %}
+          <div>
+            <h2>{{ project.goal }}</h2>
+            <p class="library-meta"><span class="status-pill status-{{ project.status }}">{{ project.status }}</span><span>{{ project.image_count }} images</span><span>{{ project.updated }}</span></p>
+          </div>
+          {% if project.ready %}<a class="secondary-button" href="/?project={{ project.id }}">Open report</a>{% endif %}
+        </div>
+        <div class="tabs" role="tablist" aria-label="Project media">
+          <button type="button" class="tab-btn active" data-tab="photos-{{ project.id }}">Photos</button>
+          <button type="button" class="tab-btn" data-tab="notes-{{ project.id }}">Notes</button>
+        </div>
+        <div class="tab-panel" id="photos-{{ project.id }}" role="tabpanel">
+          {% if project.photos %}
+          <div class="library-photos">
+            {% for photo in project.photos %}
+            <a href="{{ photo.full }}" target="_blank" rel="noopener"><img src="{{ photo.thumb }}" alt="{{ photo.title }}" loading="lazy" /></a>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="empty-copy">No photos yet.</p>
+          {% endif %}
+        </div>
+        <div class="tab-panel hidden" id="notes-{{ project.id }}" role="tabpanel">
+          {% if project.notes %}<h4>Supplied notes</h4><p class="library-notes">{{ project.notes }}</p>{% endif %}
+          {% if project.takeaways %}<h4>Transcript takeaways</h4><ul>{% for item in project.takeaways %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+          {% if not project.notes and not project.takeaways %}<p class="empty-copy">No notes yet.</p>{% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </main>
+
+    <script>
+      document.querySelectorAll(".library-card").forEach(card => {
+        const buttons = card.querySelectorAll(".tab-btn");
+        buttons.forEach(button => button.addEventListener("click", () => {
+          buttons.forEach(other => other.classList.toggle("active", other === button));
+          card.querySelectorAll(".tab-panel").forEach(panel => {
+            panel.classList.toggle("hidden", panel.id !== button.dataset.tab);
+          });
+        }));
+      });
+    </script>
+  </body>
+</html>
