@@ -1,7 +1,7 @@
 [project]
 name = "signalforge"
 version = "0.1.0"
-description = "Turn messy photos of technical slides into an evidence-backed action plan."
+description = "Turn visual captures and notes into a source-backed field report and build blueprint."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [

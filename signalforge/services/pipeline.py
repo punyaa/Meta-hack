@@ -24,6 +24,7 @@ ProgressCallback = Callable[[str, int], None]
 async def process_project(
     project_id: str,
     goal: str,
+    context_notes: str,
     originals: list[tuple[str, str, Path]],
     settings: Settings,
     progress: ProgressCallback,
@@ -110,19 +111,21 @@ async def process_project(
 
     progress("Compiling the evidence-backed plan", 78)
     if muse is None:
-        plan = demo_plan(goal, analyses)
+        plan = demo_plan(goal, analyses, context_notes)
     else:
         plan = await asyncio.to_thread(
             muse.build_plan,
             goal,
             analyses,
             set(retained_lookup),
+            context_notes,
         )
 
     progress("Plan ready", 100)
     return ProjectResult(
         project_id=project_id,
         goal=goal,
+        context_notes=context_notes,
         plan=plan,
         images=sorted(results, key=lambda item: item.image_id),
         duplicate_count=len(duplicate_map),

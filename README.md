@@ -1,6 +1,6 @@
 # SignalForge
 
-SignalForge turns a folder of messy technical slide photos and one goal into an evidence-backed **now / next / later** action plan.
+SignalForge turns messy technical slide photos, screenshots, and optional speaker notes into a source-backed visual field report and a buildable prototype blueprint.
 
 The MVP combines:
 
@@ -8,6 +8,13 @@ The MVP combines:
 - **SAM 3.1** for pixel-accurate projection-screen or whiteboard masks.
 - **OpenCV** for perspective correction and readability enhancement.
 - Local perceptual hashing to remove duplicate shots before model calls.
+
+The result uses a magazine-like structure rather than a dashboard:
+
+1. **Photo essay** — original and repaired captures with editorial captions.
+2. **What Muse learned** — cross-image themes plus lessons from notes or a transcript.
+3. **Prototype blueprint** — problem, intended user, MVP scope, architecture, backlog, and first task.
+4. **Evidence appendix** — source ids, support labels, missing context, and conflicts.
 
 ## Run locally
 
@@ -34,11 +41,43 @@ SIGNALFORGE_DEMO_MODE=false
 
 The Muse Code CLI login is stored in macOS Keychain and is separate from the environment variable used by this web application. Never commit `.env`.
 
+## How Muse Spark works in this repository
+
+`signalforge/services/muse.py` is the only Model API boundary. It uses the OpenAI-compatible Meta endpoint:
+
+```python
+client = OpenAI(
+    base_url="https://api.meta.ai/v1",
+    api_key=os.environ["MODEL_API_KEY"],
+)
+```
+
+SignalForge makes two schema-constrained Muse calls:
+
+1. `analyze_image()` sends one retained image and parses the response directly into `ImageAnalysis`.
+2. `build_plan()` sends the validated image analyses and optional notes/transcript, then parses the response into `CollectionPlan`.
+
+Pydantic schemas in `signalforge/models.py` make the response contract explicit. `pipeline.py` removes duplicate captures before model calls, sends corrected images back to Muse when available, and rejects evidence ids that do not belong to the current project.
+
+The browser submits notes through the optional `context_notes` form field. Muse must keep insights found only in those notes inside `notes_takeaways`; they cannot be presented as visually supported claims.
+
 ## Test
 
 ```bash
 uv run pytest
 ```
+
+The suite covers:
+
+- perspective geometry and minimum surface size;
+- binary mask resizing;
+- duplicate selection and sharpness preference;
+- live/demo configuration;
+- upload rejection before filesystem mutation;
+- demo pipeline behavior and progress reporting;
+- Muse image request construction without a network call;
+- transcript propagation into the synthesis prompt;
+- evidence-id sanitization across themes, actions, and the build blueprint.
 
 ## MVP flow
 
@@ -48,8 +87,10 @@ uv run pytest
 4. Muse classifies and reads each retained image.
 5. SAM segments a photographed screen or board.
 6. OpenCV estimates its quadrilateral and flattens the image.
-7. Muse re-reads corrected images and compiles a grounded action plan.
-8. Every supported action refers to a real image id.
+7. Muse re-reads corrected images and reasons across the retained collection.
+8. Optional notes or a transcript are summarized separately from visual evidence.
+9. Muse compiles the photo essay, themes, blueprint, and build sequence.
+10. Every supported theme or action refers to a real image id.
 
 ## Important limitation
 

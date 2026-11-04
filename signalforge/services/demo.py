@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from signalforge.models import CollectionPlan, ImageAnalysis, PlanAction
+from signalforge.models import (
+    BuildBlueprint,
+    CollectionPlan,
+    ImageAnalysis,
+    PlanAction,
+    ThemeInsight,
+)
 
 
 def demo_analysis(image_id: str, filename: str, goal: str) -> ImageAnalysis:
@@ -22,7 +28,11 @@ def demo_analysis(image_id: str, filename: str, goal: str) -> ImageAnalysis:
     )
 
 
-def demo_plan(goal: str, analyses: list[ImageAnalysis]) -> CollectionPlan:
+def demo_plan(
+    goal: str,
+    analyses: list[ImageAnalysis],
+    context_notes: str = "",
+) -> CollectionPlan:
     ids = [analysis.image_id for analysis in analyses]
     first = ids[:2]
     return CollectionPlan(
@@ -30,6 +40,32 @@ def demo_plan(goal: str, analyses: list[ImageAnalysis]) -> CollectionPlan:
         summary=(
             f"SignalForge organized {len(analyses)} retained images around: {goal}. "
             "Connect the Meta Model API key to replace this demonstration plan with grounded Muse analysis."
+        ),
+        themes=[
+            ThemeInsight(
+                title="Visual evidence prepared",
+                insight="The retained captures are ready for grounded Muse analysis.",
+                evidence_ids=first,
+                support="partial",
+            )
+        ],
+        notes_takeaways=(
+            ["Notes or transcript supplied; connect Muse to extract grounded takeaways."]
+            if context_notes.strip()
+            else []
+        ),
+        blueprint=BuildBlueprint(
+            problem_statement="The visual collection needs grounded analysis before a build decision is made.",
+            target_user="The person who captured the source material.",
+            mvp_scope=["Review corrected images", "Connect Muse", "Verify source links"],
+            architecture=["FastAPI ingestion", "SAM or local surface detection", "Muse synthesis"],
+            backlog=[],
+            first_task=PlanAction(
+                title="Review retained evidence",
+                description="Confirm that the corrected captures are readable before live model analysis.",
+                evidence_ids=first,
+                support="partial",
+            ),
         ),
         now=[
             PlanAction(

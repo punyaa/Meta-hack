@@ -5,10 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Compile messy slide photos into evidence-backed action." />
     <title>SignalForge</title>
+    <script>
+      try {
+        if (localStorage.getItem("signalforge-theme") !== "dark") {
+          document.documentElement.dataset.theme = "light";
+        }
+      } catch (error) {}
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/styles.css?v=2" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -22,6 +29,7 @@
       <div class="nav-models">
         <span class="built-with">Built with Meta models</span>
         <div class="model-pill"><span></span>Muse Spark 1.3 + SAM 3.1</div>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light theme"><svg class="sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5" /><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M19.4 4.6l-1.8 1.8M6.4 17.6l-1.8 1.8" /></svg><svg class="moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" /></svg></button>
       </div>
     </header>
 
@@ -43,7 +51,7 @@
         <div class="model-constellation" aria-hidden="true">
           <div class="orbit orbit-a"></div>
           <div class="orbit orbit-b"></div>
-          <div class="core"><span class="core-label">SIGNAL</span><strong>Forge</strong></div>
+          <div class="core"><span class="muse-mascot"><img src="/static/muse.jpeg" alt="" /></span><span class="core-label">MUSE</span></div>
           <div class="model-node muse-node"><i></i><span>MUSE</span><small>understands</small></div>
           <div class="model-node sam-node"><i></i><span>SAM</span><small>isolates</small></div>
           <div class="model-node evidence-node"><i></i><span>PROOF</span><small>grounds</small></div>
@@ -63,22 +71,30 @@
       {% endif %}
 
       <section class="workspace" id="workspace">
-        <form id="forge-form" class="forge-card">
+        <form id="forge-form" class="forge-card" data-max-images="{{ max_images }}">
           <div class="card-heading"><div><span class="card-kicker">INPUT</span><h2>Compile a visual folder</h2></div><span class="live-chip">● READY</span></div>
           <div class="step-label">01 · ADD YOUR EVIDENCE</div>
           <label class="drop-zone" id="drop-zone" for="files">
             <input id="files" name="files" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple required />
-            <span class="drop-icon"><i></i>↥</span>
+            <span class="drop-icon"><i></i><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></span>
             <strong>Drop slide photos here</strong>
             <span>JPG, PNG, WebP or HEIC · up to {{ max_images }} images</span>
           </label>
+          <div class="file-meta"><span id="file-count">No images selected</span></div>
           <div class="preview-strip" id="preview-strip"></div>
 
           <div class="step-label goal-label">02 · NAME THE OUTCOME</div>
           <label class="goal-field">
-            <span>What are you trying to accomplish?</span>
+            <span>What are you trying to accomplish? <b class="char-count" id="goal-count"></b></span>
             <textarea id="goal" name="goal" minlength="8" maxlength="500" required placeholder="Help me build a visual assistant using the ideas in these workshop slides."></textarea>
           </label>
+
+          <div class="step-label notes-label">03 · ADD NOTES OR A TRANSCRIPT</div>
+          <label class="goal-field">
+            <span>What did you hear, write down, or want Muse to remember? <b class="char-count" id="notes-count"></b></span>
+            <textarea id="context-notes" name="context_notes" maxlength="12000" placeholder="Paste speaker notes, a transcript, or your own observations. Muse will keep these takeaways separate from claims supported by the images."></textarea>
+          </label>
+          <p class="form-error hidden" id="form-error" role="alert"></p>
           <button class="forge-button" type="submit"><i></i>Compile with Muse <span>→</span></button>
           <p class="privacy-note">Live mode sends retained images to Meta Model API. Local run artifacts are ignored by Git.</p>
         </form>
@@ -97,26 +113,63 @@
 
       <section class="progress-panel hidden" id="progress-panel" aria-live="polite">
         <div class="progress-top"><span id="progress-message">Preparing images</span><strong id="progress-number">0%</strong></div>
-        <div class="progress-track"><div id="progress-bar"></div></div>
+        <div class="progress-track" id="progress-track" role="progressbar" aria-label="Processing progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
         <p><span class="spark-dot"></span>Muse reads · SAM isolates · SignalForge compiles</p>
       </section>
 
-      <section class="results hidden" id="results">
-        <div class="result-heading">
-          <div><div class="eyebrow">YOUR COMPILED SIGNAL</div><h2 id="result-headline"></h2></div>
+      <section class="results magazine hidden" id="results">
+        <header class="magazine-cover">
+          <div class="magazine-masthead">SIGNALFORGE · VISUAL FIELD REPORT</div>
           <button id="new-project" class="secondary-button">Start another</button>
-        </div>
-        <p id="result-summary" class="result-summary"></p>
-        <div class="stats" id="stats"></div>
-        <div class="plan-grid" id="plan-grid"></div>
-        <div class="evidence-section">
-          <div class="section-title"><h3>Evidence</h3><p>Open a card to compare the original and corrected visual.</p></div>
+          <div class="eyebrow">YOUR COMPILED SIGNAL</div>
+          <h2 id="result-headline"></h2>
+          <p id="result-summary" class="result-summary"></p>
+          <div class="stats" id="stats"></div>
+        </header>
+
+        <section class="magazine-chapter visual-story">
+          <div class="chapter-number">01</div>
+          <div class="section-title">
+            <div><span>PHOTO ESSAY</span><h3>The visual story</h3></div>
+            <p>Open a photograph to compare the original capture with the repaired surface.</p>
+          </div>
           <div class="evidence-grid" id="evidence-grid"></div>
-        </div>
-        <div class="detail-grid">
+        </section>
+
+        <section class="magazine-chapter learned-section">
+          <div class="chapter-number">02</div>
+          <div class="section-title"><div><span>EDITORIAL NOTES</span><h3>What Muse learned</h3></div></div>
+          <div class="learned-grid">
+            <div><h4>Patterns across the captures</h4><div id="theme-grid" class="theme-grid"></div></div>
+            <aside><h4>Notes and transcript</h4><ul id="notes-list"></ul></aside>
+          </div>
+        </section>
+
+        <section class="magazine-chapter blueprint-section">
+          <div class="chapter-number">03</div>
+          <div class="section-title"><div><span>BUILD BRIEF</span><h3>The prototype blueprint</h3></div></div>
+          <div class="blueprint-lead">
+            <article><span>Problem</span><p id="blueprint-problem"></p></article>
+            <article><span>Designed for</span><p id="blueprint-user"></p></article>
+          </div>
+          <div class="blueprint-columns">
+            <article><h4>MVP scope</h4><ul id="scope-list"></ul></article>
+            <article><h4>Architecture</h4><ul id="architecture-list"></ul></article>
+            <article><h4>Backlog</h4><div id="backlog-list"></div></article>
+          </div>
+          <article class="first-task" id="first-task"></article>
+        </section>
+
+        <section class="magazine-chapter sequence-section">
+          <div class="chapter-number">04</div>
+          <div class="section-title"><div><span>EXECUTION</span><h3>The build sequence</h3></div></div>
+          <div class="plan-grid" id="plan-grid"></div>
+        </section>
+
+        <section class="detail-grid magazine-notes">
           <article><h3>Still missing</h3><ul id="missing-list"></ul></article>
-          <article><h3>Conflicts</h3><ul id="conflict-list"></ul></article>
-        </div>
+          <article><h3>Conflicts to resolve</h3><ul id="conflict-list"></ul></article>
+        </section>
       </section>
     </main>
 
@@ -124,6 +177,6 @@
       <button id="close-dialog" aria-label="Close">×</button>
       <div id="dialog-content"></div>
     </dialog>
-    <script src="/static/app.js" defer></script>
+    <script src="/static/app.js?v=2" defer></script>
   </body>
 </html>

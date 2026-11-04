@@ -36,6 +36,22 @@ class PlanAction(BaseModel):
     support: SupportStatus
 
 
+class ThemeInsight(BaseModel):
+    title: str
+    insight: str
+    evidence_ids: list[str] = Field(default_factory=list)
+    support: SupportStatus
+
+
+class BuildBlueprint(BaseModel):
+    problem_statement: str = ""
+    target_user: str = ""
+    mvp_scope: list[str] = Field(default_factory=list)
+    architecture: list[str] = Field(default_factory=list)
+    backlog: list[PlanAction] = Field(default_factory=list)
+    first_task: PlanAction | None = None
+
+
 class Conflict(BaseModel):
     description: str
     evidence_ids: list[str] = Field(default_factory=list)
@@ -44,6 +60,9 @@ class Conflict(BaseModel):
 class CollectionPlan(BaseModel):
     headline: str
     summary: str
+    themes: list[ThemeInsight] = Field(default_factory=list)
+    notes_takeaways: list[str] = Field(default_factory=list)
+    blueprint: BuildBlueprint = Field(default_factory=BuildBlueprint)
     now: list[PlanAction] = Field(default_factory=list)
     next: list[PlanAction] = Field(default_factory=list)
     later: list[PlanAction] = Field(default_factory=list)
@@ -64,6 +83,7 @@ class ImageResult(BaseModel):
 class ProjectResult(BaseModel):
     project_id: str
     goal: str
+    context_notes: str = ""
     plan: CollectionPlan
     images: list[ImageResult]
     duplicate_count: int

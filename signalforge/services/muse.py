@@ -57,16 +57,27 @@ Use image_id exactly as supplied: {image_id}
         goal: str,
         analyses: list[ImageAnalysis],
         valid_image_ids: set[str],
+        context_notes: str = "",
     ) -> CollectionPlan:
         evidence = "\n".join(analysis.model_dump_json() for analysis in analyses)
+        notes = context_notes.strip() or "No notes or transcript were supplied."
         prompt = f"""
-Create one concise, practical action plan for this goal:
+Create a concise editorial report and build blueprint for this goal:
 {goal}
 
 The JSON lines below are grounded analyses of the user's images:
 {evidence}
 
+The user also supplied these notes or transcript. Treat them as context, not visual
+evidence, and summarize their useful takeaways separately:
+{notes}
+
 Rules:
+- Write a strong headline and a short magazine-style standfirst in summary.
+- Identify the most important themes and link each visual theme to image evidence.
+- Put lessons found only in the notes or transcript in notes_takeaways.
+- Create a build blueprint with a problem statement, target user, MVP scope,
+  architecture, backlog, and one concrete first task.
 - Use now/next/later as a real sequence, not generic advice.
 - Every evidence_id must come from this exact allowed set: {sorted(valid_image_ids)}.
 - Mark an action "supported" only when the supplied analysis directly supports it.
@@ -87,10 +98,17 @@ Rules:
 
 
 def _remove_invalid_evidence(plan: CollectionPlan, valid_ids: set[str]) -> CollectionPlan:
-    for action in [*plan.now, *plan.next, *plan.later]:
+    actions = [*plan.now, *plan.next, *plan.later, *plan.blueprint.backlog]
+    if plan.blueprint.first_task is not None:
+        actions.append(plan.blueprint.first_task)
+    for action in actions:
         action.evidence_ids = [value for value in action.evidence_ids if value in valid_ids]
         if not action.evidence_ids and action.support == "supported":
             action.support = "inference"
+    for theme in plan.themes:
+        theme.evidence_ids = [value for value in theme.evidence_ids if value in valid_ids]
+        if not theme.evidence_ids and theme.support == "supported":
+            theme.support = "inference"
     for conflict in plan.conflicts:
         conflict.evidence_ids = [value for value in conflict.evidence_ids if value in valid_ids]
     return plan

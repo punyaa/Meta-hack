@@ -49,10 +49,16 @@ async def health() -> dict[str, Any]:
 @app.post("/api/projects", status_code=202)
 async def create_project(
     goal: str = Form(min_length=8, max_length=500),
+    context_notes: str = Form(default="", max_length=12000),
     files: list[UploadFile] = File(...),
 ) -> dict[str, str]:
     if not files or len(files) > settings.max_images:
         raise HTTPException(400, f"Upload between 1 and {settings.max_images} images.")
+
+    supported_types = {"image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"}
+    unsupported = next((upload for upload in files if upload.content_type not in supported_types), None)
+    if unsupported is not None:
+        raise HTTPException(400, f"{unsupported.filename or 'A file'} is not a supported image.")
 
     project_id = uuid.uuid4().hex[:12]
     original_dir = settings.data_dir / project_id / "originals"
@@ -60,8 +66,6 @@ async def create_project(
     originals: list[tuple[str, str, Path]] = []
 
     for index, upload in enumerate(files, start=1):
-        if upload.content_type not in {"image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"}:
-            raise HTTPException(400, f"{upload.filename or 'A file'} is not a supported image.")
         safe_name = re.sub(r"[^A-Za-z0-9._-]+", "-", upload.filename or f"image-{index}")
         raw = await upload.read()
         if len(raw) > 20 * 1024 * 1024:
@@ -89,7 +93,14 @@ async def create_project(
     async def run() -> None:
         jobs[project_id]["status"] = "processing"
         try:
-            result = await process_project(project_id, goal, originals, settings, report)
+            result = await process_project(
+                project_id,
+                goal,
+                context_notes,
+                originals,
+                settings,
+                report,
+            )
             jobs[project_id].update(status="complete", result=result.model_dump(mode="json"))
         except Exception as error:
             jobs[project_id].update(
