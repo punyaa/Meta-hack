@@ -1,3 +1,4 @@
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 
@@ -42,9 +43,20 @@ class Settings(BaseSettings):
         return bool(self.postgres_url)
 
 
+def ensure_data_dir(settings: Settings) -> Path:
+    """Return a writable run directory, falling back to tmp on read-only disks."""
+    try:
+        settings.data_dir.mkdir(parents=True, exist_ok=True)
+        return settings.data_dir
+    except OSError:
+        fallback = Path(tempfile.gettempdir()) / "signalforge-runs"
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
+
+
 @lru_cache
 def get_settings() -> Settings:
     settings = Settings()
-    settings.data_dir.mkdir(parents=True, exist_ok=True)
+    settings.data_dir = ensure_data_dir(settings)
     return settings
 
